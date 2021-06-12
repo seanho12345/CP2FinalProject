@@ -1,0 +1,23 @@
+#include "sanjuan.h"
+
+int main(){
+    srand(time(NULL));
+    int language = 0;
+    int players = 4;
+    while(1){
+        int choice;
+        choice = mainmenu();
+        if(choice == 1){
+            CLEAR
+            game_start(players);
+        }else if(choice == 2){
+            language = setlanguage();
+        }else if(choice == 3){
+            CLEAR
+            printbanner();
+            printf("See you next time!\n");
+            break;
+        }
+    }
+    return 0;
+}
