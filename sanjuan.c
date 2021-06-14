@@ -434,6 +434,10 @@ void builder(int privilege, int players){
         if(playernow == players){
             playernow = 0;
         }
-    
     }
+}
+
+void producer(int privilege, int players){
+    int playernow = privilege;
+    int count = players;
 }
