@@ -1,5 +1,6 @@
 #include "sanjuan.h"
 
+const string invalidtext[2] = {"Invalid Option", "錯誤選項"};
 const string cardNameData[2][30] = 
     {{"\033[0;35mIndigo plant\033[0m", "\033[0;33mSugar Mill\033[0m", "\033[0;32mTobacco storage\033[0m",
     "\033[0;34mCoffee Roaster\033[0m", "\033[0;36mSilver smelter\033[0m",
@@ -102,12 +103,14 @@ const u8 priceList[5][5] = {{1, 1, 2, 2, 3},
                             {1, 2, 2, 3, 3},
                             {1, 1, 1, 2, 2}};
 
-int cardCounts[29];
+int cardCounts[29] = {0};
+int discardcard[29] = {0};
 int language = 0;
 
-player player_init = {
-    .buildings = {-1},
-    .deck = {-1},
+const player player_init = {
+    .buildings = {-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1},
+    .deck = {-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1},
+    .hasgoods = {-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1},
     .builds = 0,
     .cards = 0,
     .maxcard = 6,
@@ -149,7 +152,7 @@ int mainmenu(){
 }
 
 //Set Language
-int setlanguage(){
+void setlanguage(){
     int rt = 0,invalid = 0;
     while(rt < 1 || rt > 2){
         CLEAR
@@ -164,11 +167,11 @@ int setlanguage(){
             invalid = 1;
         }
     }
-    return rt-1;
+    language = rt-1;
 }
 
 //generate random card
-int randomcard(int *cardCounts){ 
+int randomcard(){ 
     int rt = rand() % 29;
     while(cardCounts[rt] == 0){
         rt = rand() % 29;
@@ -189,11 +192,11 @@ void game_start(int players){
         p[i] = player_init;
         p[i].builds = 1;
         p[i].buildings[0] = 0;
-        p[i].buildings[1] = -1;
         for(int j=0; j<4; j++){
             p[i].deck[j] = randomcard(cardCounts);
             p[i].cards++;
         }
+        printf("%d\n", p[i].hasgoods[1]);
     }
     p[0].isbot = 0;
     main_game(players);
@@ -259,7 +262,7 @@ void main_game(int players){
                     builder(playernow, players);
                     break;
                 case 1:
-                    //producer(playernow, players);
+                    producer(playernow, players);
                     break;
                 case 2:
                     //trader(playernow, players);
@@ -283,16 +286,32 @@ void main_game(int players){
     }
 }
 
-//Print Player Hand Cards
+//Print player's hand
 void printdeck(int playernum){
+    const string printdecktext[2] = {"There is no card", "沒有手牌"};
     for(int i=0; i<p[playernum].cards; i++){
         printf("(%d) %s Cost:%u VP:%u\n", i+1, cardNameData[language][p[playernum].deck[i]], cost[p[playernum].deck[i]] , vp[p[playernum].deck[i]]);
     }
+    if(p[playernum].cards == 0){
+        setcolor(RED_BACK);
+        printf("%s\n", printdecktext[language]);
+        setcolor(RESET);
+    }
 }
 
+//print player's buildings
+void printbuilding(int playernum){
+    for(int i=0; i<p[playernum].builds; i++){
+        printf("(%d) %s goods:%d\n", i+1, cardNameData[language][p[playernum].buildings[i]], p[playernum].hasgoods[i]);
+    }
+}
+
+//rebuild player's hand
 void rebuilddeck(int playernum){
+    printf("Rebuilding...");
     int tmp[12] = {-1},tmpcards = 0;
     for(int i=0; i<p[playernum].cards; i++){
+
         if(p[playernum].deck[i] != -1){
             tmp[tmpcards] = p[playernum].deck[i];
             tmpcards++;
@@ -302,11 +321,23 @@ void rebuilddeck(int playernum){
         p[playernum].deck[i] = tmp[i];
     }
     p[playernum].cards = tmpcards;
+    printf("Success\n");
 }
 
+//discard card from player's hand
+void playerdiscard(int playernum, int cardpos){
+    discardcard[p[playernum].deck[cardpos]]++;
+    p[playernum].deck[cardpos] = -1;
+    rebuilddeck(playernum);
+}
+
+//builderphase
 void builder(int privilege, int players){
     //printf("Builder Phase\n");
     //PAUSE
+    const string buildertext[2][6] = {{"Skip Build", "Build", "Select A Card to Discard", "Not Enough Card to Pay The Cost", "You chose to build", "You skipped this round"},
+                                       "跳過", "建蓋", "選擇一張卡丟棄", "不夠支付該卡的花費", "你選擇建蓋", "你跳過了此回合"};
+
     int playernow = privilege;
     int count = players;
     while(count--){
@@ -314,6 +345,7 @@ void builder(int privilege, int players){
             int choice, invalid = 0, costinvalid = 0;
             int costcount;
             int reducecost = 0;
+            int tmpbuilding = -1;
             if(playernow == privilege){
                 reducecost++;
             }
@@ -322,25 +354,37 @@ void builder(int privilege, int players){
                 printf("=============================\n");
                 printdeck(playernow);
                 printf("=============================\n");
-                printf("(0)Skip Build (1-%d)Build\n\n", p[playernow].cards);
+                printf("(0)%s ", buildertext[language][0]);
+                if(p[playernow].cards > 0){
+                    printf("(1-%d)%s", p[playernow].cards, buildertext[language][1]);
+                }
+                printf("\n\n");
                 if(invalid) INVALID
-                if(costinvalid) printf("%sNot Enough Card to Pay The Cost%s\n",RED_BACK,RESET);
+                if(costinvalid) printf("%s%s%s\n",RED_BACK, buildertext[language][3],RESET);
                 printf("Choice:");
                 scanf("%d", &choice);
                 FLUSH
                 if(choice < 0 || choice > p[playernow].cards){  //check for invalid input
                     invalid = 1;
-                }else if(cost[p[playernow].deck[choice-1]]-reducecost > p[playernow].cards-1){
+                }else if(choice != 0 && cost[p[playernow].deck[choice-1]]-reducecost > p[playernow].cards-1){
                     costinvalid = 1;
-                }else{
+                }else if(choice != 0){
+                    tmpbuilding = p[playernow].deck[choice-1];
                     costcount = cost[p[playernow].deck[choice-1]]-reducecost;
+                    p[playernow].buildings[p[playernow].builds] = p[playernow].deck[choice-1];
+                    p[playernow].builds++;
                     p[playernow].deck[choice-1] = -1;
                     rebuilddeck(playernow);
                     invalid = 0;
                     break;
+                }else{
+                    break;
                 }
             }
             if(choice != 0){    //Discard cards to build
+                printf("\n=============================\n");
+                printf("%s %s\n", buildertext[language][4], cardNameData[language][tmpbuilding]);
+                PAUSE
                 int tmp = 1;
                 while(tmp <= costcount){
                     while(1){
@@ -348,7 +392,7 @@ void builder(int privilege, int players){
                         printf("=============================\n");
                         printdeck(playernow);
                         printf("=============================\n");
-                        printf("Select A Card to Discard (%d/%d)\n", tmp, costcount);
+                        printf("%s (%d/%d)\n", buildertext[language][2], tmp, costcount);
                         if(invalid) INVALID
                         printf("Choice: ");
                         scanf("%d", &choice);
@@ -358,19 +402,17 @@ void builder(int privilege, int players){
                         }else{
                             break;
                         }
-                        p[playernow].deck[choice-1] = -1;
-                        p[playernow].buildings[p[playernow].builds] = p[playernow].deck[choice-1];
-                        p[playernow].builds++;
-                        rebuilddeck(playernow);
                     }
+                    playerdiscard(playernow, choice-1);
                     tmp++;
                 }
-                p[playernow].deck[choice-1] = -1;
-                p[playernow].buildings[p[playernow].builds] = p[playernow].deck[choice-1];
-                p[playernow].builds++;
-                rebuilddeck(playernow);
+            }else{
+                printf("\n=============================\n");
+                printf("%s\n", buildertext[language][5]);
+                PAUSE
             }
         }else{
+            printf("Bot Action\n");
             int botbuild = rand() % 2;
             int built = 0;
             int reducecost = 0;
@@ -390,7 +432,7 @@ void builder(int privilege, int players){
                 if(avaliablenum != 0){  //choose which card to build
                     int choice = rand() % avaliablenum;
                     choice = avaliable[choice];
-                    int costcount = cost[p[playernow].deck[choice-1]]-reducecost;
+                    int costcount = cost[p[playernow].deck[choice]]-reducecost;
                     builtbuilding = p[playernow].deck[choice];
                     p[playernow].deck[choice] = -1;
                     rebuilddeck(playernow);
@@ -399,18 +441,19 @@ void builder(int privilege, int players){
                             p[playernow].deck[i] = -1;
                         }
                         p[playernow].cards = 0;
+                        built = 1;
                     }else{
                         while(costcount--){
                             while(1){
                                 int discard = rand() % p[playernow].cards;
                                 if(p[playernow].deck[discard] != -1){
                                     p[playernow].deck[discard] = -1;
+                                    playerdiscard(playernow, discard);
                                     break;
                                 }
                             }
                         }
                         built = 1;
-                        rebuilddeck(playernow);
                     }
                 }
             }
@@ -437,7 +480,90 @@ void builder(int privilege, int players){
     }
 }
 
+//producer phase
 void producer(int privilege, int players){
+    const string producertext[2][6] = {{"Skip Produce", "Produce", "You are unable to produce any goods", "Choose one production building to produce", "produce 1 good", "You skipped this produce phase"},
+                                       "跳過", "生產", "你無法進行任何生產", "選擇任一生產建築進行生產", "產出一份資源", "你跳過了此次生產"};
+
+    
     int playernow = privilege;
     int count = players;
+
+    while(count--){
+        int producecount = 1;
+        int produceable = 0;
+        int producebuilding[12] = {-1};
+        if(playernow == privilege){
+            producecount++;
+        }
+        if(p[playernow].isbot == 0){
+            for(int i=0; i<p[playernow].builds; i++){
+                if(type[p[playernow].buildings[i]] == 0 && p[playernow].hasgoods[i] == -1){
+                    producebuilding[produceable] = i;
+                    produceable++;
+                }
+            }
+            if(produceable < producecount){
+                producecount = produceable;
+            }
+            int tmptotal = producecount, tmpcount = 1;
+            if(produceable){
+                while(producecount--){
+                    int choice = -1, invalid = 0;
+                    while(1){
+                        CLEAR
+                        printf("=============================\n");
+                        for(int i=0; i<produceable; i++){
+                            printf("(%d) %s\n", i+1, cardNameData[language][p[playernow].buildings[producebuilding[i]]]);
+                        }
+                        printf("=============================\n");
+                        printf("%s (%d/%d)\n", producertext[language][3], tmpcount, tmptotal);
+                        printf("(0)%s (1-%d)%s\n\n", producertext[language][0], produceable, producertext[language][1]);
+                        if(invalid) INVALID
+                        printf("Choice: ");
+                        scanf("%d", &choice);
+                        FLUSH
+                        if(choice < 0 || choice > produceable){
+                            invalid = 1;
+                        }else{
+                            break;
+                        }
+                    }
+                    if(choice){
+                        choice--;
+                        p[playernow].hasgoods[producebuilding[choice]] = randomcard();
+                        produceable = 0;
+                        printf("\n=============================\n");
+                        printf("%s %s\n", cardNameData[language][p[playernow].buildings[producebuilding[choice]]], producertext[language][4]);
+                        PAUSE
+                        for(int i=0 ; i<12; i++){
+                            producebuilding[i] = -1;
+                        }
+                        for(int i=0; i<p[playernow].builds; i++){
+                            if(type[p[playernow].buildings[i]] == 0 && p[playernow].hasgoods[i] == -1){
+                                producebuilding[produceable] = i;
+                                produceable++;
+                            }
+                        }
+                    }else{
+                        printf("\n=============================\n");
+                        printf("%s\n", producertext[language][5]);
+                    }
+
+                    tmpcount++;
+                }
+            }else{
+                printf("%s\n", producertext[language][2]);
+                PAUSE
+            }
+        }else{
+            CLEAR
+            printf("Bot action\n");
+            PAUSE
+        }
+        playernow++;
+        if(playernow == players){
+            playernow = 0;
+        }
+    }
 }
