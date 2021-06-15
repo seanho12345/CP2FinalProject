@@ -2,7 +2,6 @@
 
 int main(){
     srand(time(NULL));
-    int language = 0;
     int players = 4;
     while(1){
         int choice;
@@ -11,7 +10,7 @@ int main(){
             CLEAR
             game_start(players);
         }else if(choice == 2){
-            language = setlanguage();
+            setlanguage();
         }else if(choice == 3){
             CLEAR
             printbanner();
