@@ -4,7 +4,10 @@
 #include <string.h>
 #include <time.h>
 
-#pragma once
+#ifndef SANJUAN_H
+#define SANJUAN_H
+
+typedef char string[600];
 
 #define i8 int8_t
 #define u8 uint8_t
@@ -27,15 +30,16 @@
 #define RESET "\033[0m"
 
 #define setcolor(x) printf("%s", x); //Set text color
-#define INVALID printf("%sInvalid Input%s\n",RED_BACK,RESET); //Print invalid message
+#define INVALID printf("%s%s%s\n",RED_BACK,invalidtext[language],RESET); //Print invalid message
 #define CLEAR system("clear"); //Clean Console
 #define PAUSE printf("Press Enter key to continue..."); fgetc(stdin);  
 #define FLUSH while(getchar() != '\n');
 
-typedef char string[600];
+
 
 typedef struct _player{
-    int buildings[13];
+    int buildings[12];
+    int hasgoods[12];
     int deck[12];
     int builds;
     int cards,maxcard;
@@ -45,7 +49,7 @@ typedef struct _player{
 //print menu stuff
 void printbanner();
 int mainmenu();
-int setlanguage();
+void setlanguage();
 
 //game stuff
 void main_game(int);
@@ -58,3 +62,5 @@ void producer(int, int);
 void trader(int, int);
 void councilor(int, int);
 void prospector(int, int);
+
+#endif
