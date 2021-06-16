@@ -109,17 +109,18 @@ int language = 0;
 
 const player player_init = {
     .buildings = {-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1},
-    .deck = {-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1},
     .hasgoods = {-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1},
+    .deck = {-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1},
     .builds = 0,
     .cards = 0,
-    .maxcard = 6,
+    .maxcard = 7,
     .isbot = 1
 };
 
 player *p;
 
-void printbanner(){ //print beautiful banner :)
+//print beautiful banner :)
+void printbanner(){ 
         printf("=============================================\n");
         setcolor(YEL);
         printf(" ____                    _                    \n");
@@ -265,7 +266,7 @@ void main_game(int players){
                     producer(playernow, players);
                     break;
                 case 2:
-                    //trader(playernow, players);
+                    trader(playernow, players);
                     break;
                 case 3:
                     //councilor(playernow, players);
@@ -537,6 +538,7 @@ void producer(int privilege, int players){
                     if(choice){
                         choice--;
                         p[playernow].hasgoods[producebuilding[choice]] = randomcard();
+                        discardcard[p[playernow].hasgoods[producebuilding[choice]]]++;
                         produceable = 0;
                         printf("\n=============================\n");
                         printf("%s %s\n", cardNameData[language][p[playernow].buildings[producebuilding[choice]]], producertext[language][4]);
@@ -608,6 +610,105 @@ void producer(int privilege, int players){
                 PAUSE
             }
             
+        }
+        playernow++;
+        if(playernow == players){
+            playernow = 0;
+        }
+    }
+}
+
+void trader(int privilege, int players){
+    const string tradertext[2][5] = {{"You don't have any goods to sell","Choose one good to sell","Skip","Sell Good","You skipped this round"},
+                                      {"你沒有任何資源可供售出","選擇一項資源售出","跳過","賣出資源", "你跳過此回合"}};
+    int playernow = privilege;
+    int count = players;
+    int pricecard = rand() % 5;
+    while(count--){
+        int tradecount = 1;
+        int goods[12] = {-1},sellable = 0;
+        CLEAR
+        printf("=============================\n\n");
+        printf("        Price List :           \n");
+        printf("        %s%d %s%d %s%d %s%d %s%d \n\n", MAG_BACK, priceList[pricecard][0],YEL_BACK, priceList[pricecard][1],GRN_BACK, priceList[pricecard][2],BLU_BACK, priceList[pricecard][3],CYN_BACK, priceList[pricecard][4]);
+        setcolor(RESET);
+        printf("=============================\n");
+        //check if player has card tp sell;
+        for(int i=0; i<p[playernow].builds; i++){
+            if(p[playernow].hasgoods[i] != -1){
+                goods[sellable] = i;
+                sellable++;
+            }
+        }
+        
+        if(p[playernow].isbot == 0){    //User Action
+            if(playernow = privilege){
+                tradecount++;
+            }
+            if(sellable < tradecount){
+                tradecount = sellable;
+            }
+            if(sellable){
+                int choice, invalid = 0;
+                while(tradecount){
+                    for(int i=0; i<sellable; i++){
+                        printf("(%d) %s\n", i+1, cardNameData[language][p[playernow].buildings[goods[i]]]);
+                    }
+                    printf("=============================\n");
+                    printf("%s\n", tradertext[language][1]);
+                    printf("(0) %s (1-%d) %s\n", tradertext[language][2], sellable, tradertext[language][3]);
+                    printf("Choice: ");
+                    scanf("%d", &choice);
+                    FLUSH
+                    if(choice < 0 || choice > sellable){
+                        invalid = 1;
+                        continue;
+                    }else if(choice){
+                        choice--;
+                        int producebuilding = p[playernow].buildings[goods[choice]];
+                        p[playernow].hasgoods[goods[choice]] = -1;  //sell good
+                        //Get supply
+                        for(int i=0; i<priceList[pricecard][producebuilding]; i++){
+                            p[playernow].deck[p[playernow].cards] = randomcard();
+                            p[playernow].cards++;
+                        }
+                        if(language == 0){
+                            printf("\n=============================\n");
+                            printf("You sold good from %s and get %d ", cardNameData[language][producebuilding], priceList[pricecard][producebuilding]);
+                            if(priceList[pricecard][producebuilding] == 1){
+                                printf("supply\n");
+                            }else{
+                                printf("supplies\n");
+                            }
+                        }else{
+                            printf("\n=============================\n");
+                            printf("你在 %s 賣出了一份資源並且得到 %d 張手牌\n", cardNameData[language][producebuilding], priceList[pricecard][producebuilding]);
+                        }
+                        PAUSE
+                        tradecount--;
+                    }else{
+                        printf("\n=============================\n");
+                        printf("%s\n", tradertext[language][4]);
+                        tradecount--;
+                        PAUSE
+                    }
+                }
+
+            }else{
+                setcolor(RED_BACK);
+                printf("%s\n", tradertext[language][0]);
+                setcolor(RESET);
+                PAUSE
+            }
+        }else{                         //Bot action
+            if(playernow = privilege){
+                tradecount++;
+            }
+            setcolor(CYN);
+            printf("Bot action\n");
+            setcolor(RESET);
+            printf("=============================\n");
+            PAUSE
         }
         playernow++;
         if(playernow == players){
