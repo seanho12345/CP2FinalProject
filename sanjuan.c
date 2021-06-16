@@ -274,7 +274,7 @@ void main_game(int players){
                     councilor(playernow, players);
                     break;
                 case 4:
-                    //prospector(playernow, players);
+                    prospector(playernow, players);
                     break;
             }
             playernow++;
@@ -622,6 +622,7 @@ void producer(int privilege, int players){
     }
 }
 
+//trader phase
 void trader(int privilege, int players){
     const string tradertext[2][5] = {{"You don't have any goods to sell","Choose one good to sell","Skip","Sell Good","You skipped this round"},
                                       {"你沒有任何資源可供售出","選擇一項資源售出","跳過","賣出資源", "你跳過此回合"}};
@@ -641,6 +642,7 @@ void trader(int privilege, int players){
             if(playernow = privilege){
                 tradecount++;
             }
+            //check if player has card to sell
             for(int i=0; i<p[playernow].builds; i++){
                 if(p[playernow].hasgoods[i] != -1){
                     goods[sellable] = i;
@@ -653,7 +655,6 @@ void trader(int privilege, int players){
             if(sellable){
                 int choice, invalid = 0;
                 while(tradecount){
-                    //check if player has card to sell
                     for(int i=0; i<sellable; i++){
                         printf("(%d) %s\n", i+1, cardNameData[language][p[playernow].buildings[goods[i]]]);
                     }
@@ -722,29 +723,36 @@ void trader(int privilege, int players){
                 if(sellable < tradecount){
                     tradecount = sellable;
                 }
-                while(tradecount){
-                    int choice = rand() % sellable;
-                    int producebuilding = p[playernow].buildings[goods[choice]];
-                    p[playernow].hasgoods[goods[choice]] = -1;  //sell good
-                    //Get supply
-                    for(int i=0; i<priceList[pricecard][producebuilding]; i++){
-                        p[playernow].deck[p[playernow].cards] = randomcard();
-                        p[playernow].cards++;
-                    }
-                    if(language == 0){
-                        printf("\n=============================\n");
-                        printf("Player %d sold good from %s and get %d ", playernow+1, cardNameData[language][producebuilding], priceList[pricecard][producebuilding]);
-                        if(priceList[pricecard][producebuilding] == 1){
-                            printf("supply\n");
-                        }else{
-                            printf("supplies\n");
+                if(tradecount){
+                    while(tradecount){
+                        int choice = rand() % sellable;
+                        int producebuilding = p[playernow].buildings[goods[choice]];
+                        p[playernow].hasgoods[goods[choice]] = -1;  //sell good
+                        //Get supply
+                        for(int i=0; i<priceList[pricecard][producebuilding]; i++){
+                            p[playernow].deck[p[playernow].cards] = randomcard();
+                            p[playernow].cards++;
                         }
-                    }else{
-                        printf("\n=============================\n"); 
-                        printf("玩家 %d 在 %s 賣出了一份資源並且得到 %d 張手牌\n", playernow+1, cardNameData[language][producebuilding], priceList[pricecard][producebuilding]);
+                        if(language == 0){
+                            printf("Player %d sold good from %s and get %d ", playernow+1, cardNameData[language][producebuilding], priceList[pricecard][producebuilding]);
+                            if(priceList[pricecard][producebuilding] == 1){
+                                printf("supply\n");
+                            }else{
+                                printf("supplies\n");
+                            }
+                        }else{
+                            printf("玩家 %d 在 %s 賣出了一份資源並且得到 %d 張手牌\n", playernow+1, cardNameData[language][producebuilding], priceList[pricecard][producebuilding]);
+                        }
+                        tradecount--;
+                        PAUSE
                     }
-                    tradecount--;
-                    PAUSE
+                }else{
+                    if(language == 0){
+                        printf("Player %d skipped this round\n", playernow+1);
+                    }else{
+                        printf("玩家 %d 跳過了此回合\n", playernow+1);
+                    }
+                    PAUSE 
                 }
             }else{
                 if(language == 0){
@@ -762,6 +770,7 @@ void trader(int privilege, int players){
     }
 }
 
+//councilor phase
 void councilor(int privilege, int players){
     const string councilortext[2][1] = {{"Choose a card to keep"},
                                          {"選擇保留其中一張卡"}};
@@ -810,15 +819,17 @@ void councilor(int privilege, int players){
                     }
                     int tmparr[getcard-1];
                     int tmpcount = 0;
-                    discardcard[tmpcards[choice]]++;
                     tmpcards[choice] = -1;
-                    for(int i=0; i<getcard--; i++){
+                    for(int i=0; i<getcard; i++){
                         if(tmpcards[i] != -1){
                             tmparr[tmpcount] = tmpcards[i];
-                            count++;
+                            tmpcount++;
                         }
                     }
                     getcard--;
+                }
+                for(int i=0; i<getcard; i++){
+                    discardcard[tmpcards[i]]++;
                 }
             }
         }else{
@@ -846,11 +857,47 @@ void councilor(int privilege, int players){
                 p[playernow].deck[p[playernow].cards] = tmpcards[choice];
                 discardcard[tmpcards[choice]]++;
                 p[playernow].cards++;
+                tmpcards[choice] = -1;
+            }
+            int tmparr[getcard-1];
+            int tmpcount = 0;
+            for(int i=0; i<getcard; i++){
+                if(tmpcards[i] != -1){
+                    tmparr[tmpcount] = tmpcards[i];
+                    tmpcount++;
+                }
+            }
+            getcard = tmpcount;
+            for(int i=0; i<getcard; i++){
+                discardcard[tmpcards[i]]++;
             }
             PAUSE
         }
         playernow++;
         if(playernow == players){
+            playernow = 0;
+        }
+    }
+}
+
+void prospector(int privilege, int players){
+    int playernow = privilege;
+    int count = players;
+    while(count--){
+        if(playernow == privilege){
+            int getcard = randomcard();
+            p[playernow].deck[p[playernow].cards] = getcard;
+            p[playernow].cards++;
+            CLEAR
+            if(language == 0){
+                printf("Player %d got one card\n", playernow+1);
+            }else{
+                printf("玩家 %d 拿到了一張卡\n", playernow+1);
+            }
+            PAUSE
+        }
+        playernow++;
+        if(playernow = players){
             playernow = 0;
         }
     }
