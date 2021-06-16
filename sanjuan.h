@@ -27,6 +27,11 @@ typedef char string[600];
 #define CYN   "\033[36m"
 #define WHT   "\033[37m"
 #define RED_BACK   "\033[41m"
+#define GRN_BACK   "\033[42m"
+#define YEL_BACK   "\033[43m"
+#define BLU_BACK   "\033[44m"
+#define MAG_BACK   "\033[45m"
+#define CYN_BACK   "\033[46m"
 #define RESET "\033[0m"
 
 #define setcolor(x) printf("%s", x); //Set text color
@@ -40,7 +45,7 @@ typedef char string[600];
 typedef struct _player{
     int buildings[12];
     int hasgoods[12];
-    int deck[12];
+    int deck[20];
     int builds;
     int cards,maxcard;
     int isbot;
