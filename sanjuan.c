@@ -11,6 +11,8 @@ const string cardNameData[2][30] =
     {"\033[0;35m染料廠\033[0m", "\033[0;33m蔗糖廠\033[0m", "\033[0;32m菸草廠\033[0m", "\033[0;34m咖啡廠\033[0m", "\033[0;36m白銀廠\033[0m", "塔樓", "禮拜堂", "鐵匠鋪", "救濟院",
     "黑市", "起重機", "木工場", "採石場", "水井", "溝渠", "攤販", "市場", "交易所", "檔案館", "辦公處", "金礦坑", "圖書館",
     "雕鑄像紀念碑", "勝利柱紀念碑", "英雄像紀念碑", "同業會館", "市政廳", "凱旋門", "宮殿"}};
+const string botactiontext[2] = {"Bot Action", "電腦回合"};
+
 
 const string roleName[2][5] = {{"Builder", "Producer", "Trader", "Councilor", "Prosoector"}, {"建築師", "生產者", "商人", "市長", "淘金者"}};
 const string roleDescription[2][5] = {{"Action\nStart from governor's left,clock wise.Player can choose to build a building and pay the card cost\n\nPrivilege\nGovernor can pay 1 less of the cost. The final cost can't lower than 1 cost.\n",
@@ -269,7 +271,7 @@ void main_game(int players){
                     trader(playernow, players);
                     break;
                 case 3:
-                    //councilor(playernow, players);
+                    councilor(playernow, players);
                     break;
                 case 4:
                     //prospector(playernow, players);
@@ -365,6 +367,8 @@ void builder(int privilege, int players){
                 printf("Choice:");
                 scanf("%d", &choice);
                 FLUSH
+                invalid = 0;
+                costinvalid = 0;
                 if(choice < 0 || choice > p[playernow].cards){  //check for invalid input
                     invalid = 1;
                 }else if(choice != 0 && cost[p[playernow].deck[choice-1]]-reducecost > p[playernow].cards-1){
@@ -415,7 +419,7 @@ void builder(int privilege, int players){
         }else{
             CLEAR
             setcolor(CYN);
-            printf("Bot action\n");
+            printf("%s\n", botactiontext[language]);
             setcolor(RESET);
             printf("=============================\n");
             int botbuild = rand() % 2;
@@ -566,7 +570,7 @@ void producer(int privilege, int players){
         }else{
             CLEAR
             setcolor(CYN);
-            printf("Bot action\n");
+            printf("%s\n", botactiontext[language]);
             setcolor(RESET);
             printf("=============================\n");
             int isproduce = rand() % 2;
@@ -632,18 +636,16 @@ void trader(int privilege, int players){
         printf("        Price List :           \n");
         printf("        %s%d %s%d %s%d %s%d %s%d \n\n", MAG_BACK, priceList[pricecard][0],YEL_BACK, priceList[pricecard][1],GRN_BACK, priceList[pricecard][2],BLU_BACK, priceList[pricecard][3],CYN_BACK, priceList[pricecard][4]);
         setcolor(RESET);
-        printf("=============================\n");
-        //check if player has card tp sell;
-        for(int i=0; i<p[playernow].builds; i++){
-            if(p[playernow].hasgoods[i] != -1){
-                goods[sellable] = i;
-                sellable++;
-            }
-        }
-        
+        printf("=============================\n");        
         if(p[playernow].isbot == 0){    //User Action
             if(playernow = privilege){
                 tradecount++;
+            }
+            for(int i=0; i<p[playernow].builds; i++){
+                if(p[playernow].hasgoods[i] != -1){
+                    goods[sellable] = i;
+                    sellable++;
+                }
             }
             if(sellable < tradecount){
                 tradecount = sellable;
@@ -651,6 +653,7 @@ void trader(int privilege, int players){
             if(sellable){
                 int choice, invalid = 0;
                 while(tradecount){
+                    //check if player has card to sell
                     for(int i=0; i<sellable; i++){
                         printf("(%d) %s\n", i+1, cardNameData[language][p[playernow].buildings[goods[i]]]);
                     }
@@ -701,13 +704,149 @@ void trader(int privilege, int players){
                 PAUSE
             }
         }else{                         //Bot action
-            if(playernow = privilege){
-                tradecount++;
-            }
+            int botaction = rand() % 2;
             setcolor(CYN);
-            printf("Bot action\n");
+            printf("%s\n", botactiontext[language]);
             setcolor(RESET);
             printf("=============================\n");
+            if(botaction){
+                if(playernow == privilege){
+                    tradecount++;
+                }
+                for(int i=0; i<p[playernow].builds; i++){
+                    if(p[playernow].hasgoods[i] != -1){
+                        goods[sellable] = i;
+                        sellable++;
+                    }
+                }
+                if(sellable < tradecount){
+                    tradecount = sellable;
+                }
+                while(tradecount){
+                    int choice = rand() % sellable;
+                    int producebuilding = p[playernow].buildings[goods[choice]];
+                    p[playernow].hasgoods[goods[choice]] = -1;  //sell good
+                    //Get supply
+                    for(int i=0; i<priceList[pricecard][producebuilding]; i++){
+                        p[playernow].deck[p[playernow].cards] = randomcard();
+                        p[playernow].cards++;
+                    }
+                    if(language == 0){
+                        printf("\n=============================\n");
+                        printf("Player %d sold good from %s and get %d ", playernow+1, cardNameData[language][producebuilding], priceList[pricecard][producebuilding]);
+                        if(priceList[pricecard][producebuilding] == 1){
+                            printf("supply\n");
+                        }else{
+                            printf("supplies\n");
+                        }
+                    }else{
+                        printf("\n=============================\n"); 
+                        printf("玩家 %d 在 %s 賣出了一份資源並且得到 %d 張手牌\n", playernow+1, cardNameData[language][producebuilding], priceList[pricecard][producebuilding]);
+                    }
+                    tradecount--;
+                    PAUSE
+                }
+            }else{
+                if(language == 0){
+                    printf("Player %d skipped this round\n", playernow+1);
+                }else{
+                    printf("玩家 %d 跳過了此回合\n", playernow+1);
+                }
+                PAUSE
+            }
+        }
+        playernow++;
+        if(playernow == players){
+            playernow = 0;
+        }
+    }
+}
+
+void councilor(int privilege, int players){
+    const string councilortext[2][1] = {{"Choose a card to keep"},
+                                         {"選擇保留其中一張卡"}};
+    int playernow = privilege;
+    int count = players;
+    while(count--){
+        int tmpcards[5] = {-1};
+        int getcard = 2;
+        int keepcard = 1;
+        if(p[playernow].isbot == 0){
+            if(playernow == privilege){
+                getcard = 5;
+            }
+            for(int i=0; i<getcard; i++){
+                tmpcards[i] = randomcard(); 
+            }
+            int keepcardcount = keepcard;
+            int choice = 0, invalid = 0;
+            while(keepcardcount){
+                CLEAR
+                printf("=============================\n"); 
+                for(int i=0; i<getcard; i++){
+                    printf("(%d) %s Cost:%u VP:%u\n", i+1, cardNameData[language][tmpcards[i]], cost[tmpcards[i]] , vp[tmpcards[i]]);
+                }
+                printf("=============================\n"); 
+                printf("%s (%d/%d)\n", councilortext[language][0], keepcard - keepcardcount+1, keepcard);
+                if(invalid) INVALID;
+                printf("Choice: ");
+                scanf("%d", &choice);
+                FLUSH
+                if(choice < 1 || choice > getcard){
+                    invalid = 1;
+                }else{
+                    choice--;
+                    p[playernow].deck[p[playernow].cards] = tmpcards[choice];
+                    p[playernow].cards++;
+                    keepcardcount--;
+                    if(language == 0){
+                        printf("\n=============================\n"); 
+                        printf("You Chose %s to keep\n",cardNameData[language][tmpcards[choice]]);
+                        PAUSE
+                    }else{
+                        printf("\n=============================\n"); 
+                        printf("你選擇保留 %s\n",cardNameData[language][tmpcards[choice]]);
+                        PAUSE
+                    }
+                    int tmparr[getcard-1];
+                    int tmpcount = 0;
+                    discardcard[tmpcards[choice]]++;
+                    tmpcards[choice] = -1;
+                    for(int i=0; i<getcard--; i++){
+                        if(tmpcards[i] != -1){
+                            tmparr[tmpcount] = tmpcards[i];
+                            count++;
+                        }
+                    }
+                    getcard--;
+                }
+            }
+        }else{
+            if(playernow == privilege){
+                getcard = 5;
+            }
+            for(int i=0; i<getcard; i++){
+                tmpcards[i] = randomcard(); 
+            }
+            CLEAR
+            setcolor(CYN);
+            printf("%s\n", botactiontext[language]);
+            setcolor(RESET);
+            printf("=============================\n");
+            if(language == 0){
+                printf("Player %d got %d cards\n", playernow+1, keepcard);
+            }else{
+                printf("玩家 %d 保留了 %d 張卡\n", playernow+1, keepcard);
+            }
+            while(keepcard--){
+                int choice = rand() % getcard;
+                while(tmpcards[choice] == -1){
+                    choice = rand() % getcard;
+                }
+                p[playernow].deck[p[playernow].cards] = tmpcards[choice];
+                discardcard[tmpcards[choice]]++;
+                p[playernow].cards++;
+            }
             PAUSE
         }
         playernow++;
