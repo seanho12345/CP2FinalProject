@@ -62,10 +62,25 @@ void game_start(int);
 void printdeck(int);
 
 //role stuff
-void builder(int, int);
-void producer(int, int);
-void trader(int, int);
-void councilor(int, int);
-void prospector(int, int);
+void builder(int);
+void producer(int);
+void trader(int);
+void councilor(int);
+void prospector(int);
+
+//card stuff
+int smithy(int, int);
+void tower(int, int);
+void poorhouse(int);
+int blackmarket(int, int);
+void carpenter(int, int);
+int quarry(int, int);
+void well(int, int);
+int aqueduct(int);
+void marketstand(int, int);
+void markethall(int);
+int tradingpost(int);
+int prefecture(int);
+void goldmine(int);
 
 #endif
