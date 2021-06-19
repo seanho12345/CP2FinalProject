@@ -129,7 +129,7 @@ void setlanguage(){
 
 int setplayers(){
     int rt = 0,invalid = 0;
-    while(rt < 1 || rt > 2){
+    while(rt < 2 || rt > 3){
         CLEAR
         if(language == 0){
             printf("How many bot do you want to play with? (2-3)\n");
@@ -581,10 +581,8 @@ void builder(int privilege){
                     invalid = 1;
                 }else if(choice != 0 && cost[p[playernow].deck[choice-1]]-reducecost > p[playernow].cards-1){
                     costinvalid = 1;
-                }else if(choice != 0 && type[p[playernow].deck[choice-1]] != 0){
-                    if(checkbuilding(playernow, p[playernow].deck[choice-1])){
-                        duplicate = 1;
-                    }
+                }else if(choice != 0 && type[p[playernow].deck[choice-1]] != 0 && checkbuilding(playernow, p[playernow].deck[choice-1])){
+                    duplicate = 1;
                 }else if(choice != 0){
                     tmpbuilding = p[playernow].deck[choice-1];
                     int iscrane = crane(playernow);
