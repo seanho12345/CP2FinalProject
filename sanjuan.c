@@ -30,7 +30,7 @@ Card List:
 Indigo plant 染料廠, Sugar Mill 蔗糖廠, Tobacco storage 菸草廠, Coffee Roaster 咖啡廠, Silver smelter 白銀廠,
 Tower 塔樓(✔), Chapel 禮拜堂(✔), Smithy 鐵匠鋪(✔), Poor House 救濟院(✔), Black Market 黑市(✔, lazy),
 Crane 起重機, Carpenter 木工場(✔), Quarry 採石場(✔), Well 水井(✔), Aqueduct 溝渠(✔),
-Market Stand 攤販(✔), Market Hall 市場(✔),, Trading Post 交易所(✔), Archive 檔案館, Perfecture 辦公處(✔), 
+Market Stand 攤販(✔), Market Hall 市場(✔),, Trading Post 交易所(✔), Archive 檔案館(✔), Perfecture 辦公處(✔), 
 Gold mine 金礦坑(✔), Library 圖書館(✔), Statue 雕鑄像紀念碑, Victory Column 勝利柱紀念碑, Hero 英雄像紀念碑,
 Guild Hall 同業會館(✔), City Hall 市政廳(✔), Triumhal Arch 凱旋門(✔), Palace 宮殿(✔)
 */
@@ -125,6 +125,26 @@ void setlanguage(){
         }
     }
     language = rt-1;
+}
+
+int setplayers(){
+    int rt = 0,invalid = 0;
+    while(rt < 1 || rt > 2){
+        CLEAR
+        if(language == 0){
+            printf("How many bot do you want to play with? (2-3)\n");
+        }else{
+            printf("需要加入多少電腦? (2-3)\n");
+        }
+        if(invalid) INVALID
+        printf("Choice: ");
+        scanf("%d", &rt);
+        FLUSH
+        if(rt < 2 || rt > 3){
+            invalid = 1;
+        }
+    }
+    return rt+1;
 }
 
 //generate random card
@@ -567,16 +587,28 @@ void builder(int privilege){
                     }
                 }else if(choice != 0){
                     tmpbuilding = p[playernow].deck[choice-1];
-                    reducecost += smithy(playernow, tmpbuilding) + quarry(playernow, tmpbuilding);
-                    costcount = cost[p[playernow].deck[choice-1]]-reducecost;
-                    p[playernow].buildings[p[playernow].builds] = p[playernow].deck[choice-1];
-                    p[playernow].builds++;
-                    reducecost += blackmarket(playernow, costcount);
-                    costcount = cost[p[playernow].deck[choice-1]]-reducecost;
-                    isgameover();
-                    p[playernow].deck[choice-1] = -1;
-                    rebuilddeck(playernow);
-                    invalid = 0;
+                    int iscrane = crane(playernow);
+                    if(iscrane > -1){
+                        discardcard[p[playernow].buildings[iscrane]]++;
+                        if(p[playernow].hasgoods[iscrane] > -1){
+                            discardcard[p[playernow].hasgoods[iscrane]]++;
+                            p[playernow].hasgoods[iscrane] = -1;
+                        }
+                        costcount = cost[tmpbuilding] - cost[p[playernow].buildings[iscrane]];
+                        p[playernow].buildings[iscrane] = tmpbuilding;
+                    }else{
+                        reducecost += smithy(playernow, tmpbuilding) + quarry(playernow, tmpbuilding);
+                        costcount = cost[p[playernow].deck[choice-1]]-reducecost;
+                        p[playernow].buildings[p[playernow].builds] = p[playernow].deck[choice-1];
+                        p[playernow].builds++;
+                        reducecost += blackmarket(playernow, costcount);
+                        costcount = cost[p[playernow].deck[choice-1]]-reducecost;
+                        isgameover();
+                        p[playernow].deck[choice-1] = -1;
+                        rebuilddeck(playernow);
+                        invalid = 0;
+                    }
+
                     break;
                 }else{
                     break;
@@ -863,7 +895,7 @@ void trader(int privilege){
             tradecount += tradingpost(playernow);
             int haslibrary = library(playernow, 3);
             if(haslibrary){
-                tradecount = haslibrary;
+                    tradecount = haslibrary;
             }
             //check if player has card to sell
             for(int i=0; i<p[playernow].builds; i++){
@@ -877,12 +909,13 @@ void trader(int privilege){
             }
             if(sellable){
                 int choice, invalid = 0;
+                const int consttradecount = tradecount;
                 while(tradecount){
                     for(int i=0; i<sellable; i++){
                         printf("(%d) %s\n", i+1, cardNameData[language][p[playernow].buildings[goods[i]]]);
                     }
                     printf("=============================\n");
-                    printf("%s\n", tradertext[language][1]);
+                    printf("%s\n (%d/%d)", tradertext[language][1], consttradecount - tradecount + 1, consttradecount);
                     printf("(0) %s (1-%d) %s\n", tradertext[language][2], sellable, tradertext[language][3]);
                     printf("Choice: ");
                     scanf("%d", &choice);
@@ -1027,6 +1060,13 @@ void councilor(int privilege){
             keepcard += prefecture(playernow);
             for(int i=0; i<getcard; i++){
                 tmpcards[i] = randomcard(); 
+            }
+            if(archive(playernow, tmpcards, getcard, keepcard)){
+                playernow++;
+                if(playernow == players){
+                    playernow = 0;
+                }
+                continue;
             }
             int keepcardcount = keepcard;
             int choice = 0, invalid = 0;
@@ -1741,6 +1781,106 @@ int library(int playernow, int phase){
                 printf("發動 %s圖書館%s 能力, 抽取兩張牌\n", GRN, RESET);
             }
             rt = 1;
+        }
+    }
+    return rt;
+}
+
+int archive(int playernow, int *cards, int getcards, int keepcards){
+    //Archive 檔案館 (18)
+    int rt = 0;
+    if(checkbuilding(playernow, 18)){
+        int discard = getcards - keepcards;
+        rt = 1;
+        for(int i=0; i<getcards; i++){
+            p[playernow].deck[p[playernow].cards] = cards[i];
+            p[playernow].cards++;
+        }
+        int choice, invalid = 0;
+        CLEAR
+        if(language == 0){
+            printf("Use %sarchive's%s ability, adds all card to hand and choose which to discard in councilor phase.\n", GRN, RESET);
+        }else{
+            printf("發動 %s檔案館%s 能力, 在市長階段中將所有抽到的卡加入手牌在選要捨棄哪些手牌\n", GRN, RESET);
+        }
+        while(discard){
+            printf("=============================\n");
+            printdeck(playernow);
+            printf("=============================\n");
+            if(language == 0){
+                printf("Choose one card to discard (%d/%d)\n", getcards - keepcards - discard, getcards-keepcards);
+            }else{
+                printf("選擇一張牌捨棄 (%d/%d)\n", getcards - keepcards - discard, getcards-keepcards);
+            }
+            if(invalid) INVALID
+            printf("Choice: ");
+            scanf("%d", &choice);
+            FLUSH
+            if(choice < 1 || choice > p[playernow].cards){
+                invalid = 1;
+            }else{
+                choice--;
+                discardcard[p[playernow].deck[choice]]++;
+                p[playernow].deck[choice] = -1;
+                rebuilddeck(playernow);
+                discard--;
+            }
+        }
+    }
+    return rt;
+}
+
+int crane(int playernow){
+    //Crane 起重機 (10)
+    const string cranetext[2][4] = {{"Do you want to use the ability?", "You chose not to use the ability", "Choose which building to be overbuild", "You chose"},
+                                      {"你要使用這項能力嗎?", "你選擇不使用這項能力", "選擇要覆蓋哪個建築", "你選擇了"}};
+    int rt = -1;
+    if(checkbuilding(playernow, 10)){
+        int choice, invalid = 0;
+        if(language == 0){
+            printf("Use %scrane's%s ability, be able to build on top of other building and pay the cost difference.\n", GRN, RESET);
+        }else{
+            printf("發動 %s起重機%s 能力, 可覆蓋自己建築物並支付差價\n", GRN, RESET);
+        }
+        while(1){
+            printf("=============================\n");
+            printf("%s\n", cranetext[language][0]);
+            printf("(1) Yes (0) No\n");
+            if(invalid) INVALID
+            printf("Choice: ");
+            scanf("%d", &choice);
+            FLUSH
+            if(choice < 0 || choice > 1){
+                invalid = 1;
+            }else{
+                break;
+            }
+        }
+        invalid = 0;
+        if(choice){
+            while(1){
+                CLEAR
+                printf("=============================\n");
+                printbuilding(playernow);
+                printf("=============================\n");
+                printf("%s\n", cranetext[language][2]);
+                printf("Choice: ");
+                scanf("%d", &choice);
+                FLUSH
+                if(choice < 1 || choice > p[playernow].builds){
+                    invalid = 1;
+                }else{
+                    choice--;
+                    break;
+                }
+            }
+            printf("=============================\n");
+            printf("%s %s\n", cranetext[language][3], cardNameData[language][p[playernow].buildings[choice]]);
+            rt = choice;
+        }else{
+            printf("=============================\n");
+            printf("%s\n", cranetext[language][1]);
+            PAUSE
         }
     }
     return rt;

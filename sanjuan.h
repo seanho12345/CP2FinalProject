@@ -58,6 +58,7 @@ int mainmenu();
 void setlanguage();
 
 //game stuff
+int setplayers();
 void main_game(int);
 void game_start(int);
 void printdeck(int);
@@ -92,6 +93,8 @@ int triumhalarch(int);
 int palace(int, int);
 void chapels(int);
 int library(int, int);
+int archive(int, int *, int, int);
+int crane(int);
 
 
 #endif
