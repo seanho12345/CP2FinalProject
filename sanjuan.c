@@ -29,7 +29,7 @@ const string councilortext[2][1] = {{"Choose a card to keep"},
 Card List:
 Indigo plant 染料廠, Sugar Mill 蔗糖廠, Tobacco storage 菸草廠, Coffee Roaster 咖啡廠, Silver smelter 白銀廠,
 Tower 塔樓(✔), Chapel 禮拜堂(✔), Smithy 鐵匠鋪(✔), Poor House 救濟院(✔), Black Market 黑市(✔, lazy),
-Crane 起重機, Carpenter 木工場(✔), Quarry 採石場(✔), Well 水井(✔), Aqueduct 溝渠(✔),
+Crane 起重機(✔, no bot), Carpenter 木工場(✔), Quarry 採石場(✔), Well 水井(✔), Aqueduct 溝渠(✔),
 Market Stand 攤販(✔), Market Hall 市場(✔),, Trading Post 交易所(✔), Archive 檔案館(✔), Perfecture 辦公處(✔), 
 Gold mine 金礦坑(✔), Library 圖書館(✔), Statue 雕鑄像紀念碑, Victory Column 勝利柱紀念碑, Hero 英雄像紀念碑,
 Guild Hall 同業會館(✔), City Hall 市政廳(✔), Triumhal Arch 凱旋門(✔), Palace 宮殿(✔)
