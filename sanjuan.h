@@ -60,6 +60,7 @@ void setlanguage();
 void main_game(int);
 void game_start(int);
 void printdeck(int);
+void caculatevp(int *, int);
 
 //role stuff
 void builder(int);
@@ -82,5 +83,10 @@ void markethall(int);
 int tradingpost(int);
 int prefecture(int);
 void goldmine(int);
+int guildhall(int);
+int cityhall(int);
+int triumhalarch(int);
+int palace(int, int);
+
 
 #endif

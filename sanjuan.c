@@ -91,12 +91,12 @@ Tower 塔樓(✔), Chapel 禮拜堂, Smithy 鐵匠鋪(✔), Poor House 救濟院
 Crane 起重機, Carpenter 木工場(✔), Quarry 採石場(✔), Well 水井(✔), Aqueduct 溝渠(✔),
 Market Stand 攤販(✔), Market Hall 市場(✔),, Trading Post 交易所(✔), Archive 檔案館, Perfecture 辦公處(✔), 
 Gold mine 金礦坑(✔), Library 圖書館, Statue 雕鑄像紀念碑, Victory Column 勝利柱紀念碑, Hero 英雄像紀念碑,
-Guild Hall 同業會館, City Hall 市政廳, Triumhal Arch 凱旋門, Palace 宮殿
+Guild Hall 同業會館(✔), City Hall 市政廳(✔), Triumhal Arch 凱旋門(✔), Palace 宮殿(✔)
 */
 
 const u8 initcardCounts[] = {10, 8, 8, 8, 8, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 2, 2, 2};
 const u8 vp[] = {1, 1, 2, 2, 3, 2, 2, 1, 1, 1, 1, 2, 2, 1, 2, 1, 2, 1, 1, 2, 1, 3, 3, 4, 5, 0, 0, 0, 0};
-const u8 type[] = {0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2};
+const u8 type[] = {0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 1, 1, 1, 1};
 const u8 phase[] = {3, 3, 3, 3, 3, 1, 1, 2, 2, 2, 2, 2, 2, 3, 3, 4, 4, 4, 5, 5, 6, 7, 8, 8, 8, 9, 9, 9, 9};
 const u8 cost[] = {1, 2, 3, 4, 5, 3, 3, 1, 2, 2, 2, 3, 4, 2, 3, 2, 4, 2, 1, 3, 1, 5, 3, 4, 5, 6, 6, 6, 6};
 const u8 priceList[5][5] = {{1, 1, 2, 2, 3},
@@ -299,6 +299,23 @@ void main_game(int playersarg){
             governor = 0;
         }
     }
+    int maxvp = 0, winner;
+    int *vps = calloc(players, sizeof(int));
+    caculatevp(vps, 1);
+    for(int i=0; i<players; i++){
+        if(vps[i] > maxvp){
+            winner = i+1;
+            maxvp = vp[i];
+        }
+    }
+    setcolor(RED_BACK)
+    if(language == 0){
+        printf("Player %d is the winner !!!", winner);
+    }else{
+        printf("玩家 %d 贏了 !!!", winner);
+    }
+    setcolor(RESET)
+    free(vps);
 }
 
 int checkbuilding(int playernum, int cardnum){
@@ -315,12 +332,14 @@ int checkbuilding(int playernum, int cardnum){
 //print all player stats
 void checkstat(int playernow){
     CLEAR
+    int *vps = calloc(players, sizeof(int));
+    caculatevp(vps, 0);
     for(int i=0; i<players; i++){
         printf("=============================\n");
         if(language == 0){
-            printf("Player %d's Building:\n", i+1);
+            printf("Player %d VP: %d\n", i+1, vps[i]);
         }else{
-            printf("玩家 %d 的建築:\n", i+1);
+            printf("玩家 %d VP: %d\n", i+1, vps[i]);
         }
         for(int j=0; j<p[i].builds; j++){
             printf("(%d) %s ", j+1, cardNameData[language][p[i].buildings[j]]);
@@ -1021,6 +1040,7 @@ void prospector(int privilege){
         if(playernow = players){
             playernow = 0;
         }
+        goldmine(playernow);
     }
 }
 
@@ -1099,6 +1119,7 @@ int blackmarket(int playernow, int cost){
                 if(invalid) INVALID
                 printf("%s\n(0)No (1)Yes\nChoice: ", blackmarkettext[language][0]);
                 scanf("%d", &choice);
+                FLUSH
                 if(choice < 0 || choice > 1){
                     invalid = 1;
                 }else{
@@ -1122,6 +1143,7 @@ int blackmarket(int playernow, int cost){
                     if(invalid) INVALID
                     printf("(0)Skip (1-%d)Select Good\nChoice: ", sellable);
                     scanf("%d", &choice);
+                    FLUSH
                     if(choice < 0 || choice > sellable){
                         invalid = 1;
                     }else if(choice){
@@ -1333,6 +1355,7 @@ void goldmine(int playernow){
                 if(invalid) INVALID
                 printf("Choice: ");
                 scanf("%d", &choice);
+                FLUSH
                 if(choice < 1 || choice > 4){
                     invalid = 1;
                 }else{
@@ -1395,5 +1418,146 @@ void goldmine(int playernow){
             PAUSE
         }
         
+    }
+}
+
+int guildhall(int playernow){
+    //Guild Hall 同業會館 (25)
+    int rt = 0;
+    if(checkbuilding(playernow, 25)){
+        for(int i=0; i<p[playernow].builds; i++){
+            if(type[p[playernow].buildings[i]] == 0){
+                rt += 2;
+            }
+        }
+    }
+    return rt;
+}
+
+int cityhall(int playernow){
+    //City Hall 市政廳 (26)
+    int rt = 0;
+    if(checkbuilding(playernow, 26)){
+        for(int i=0; i<p[playernow].builds; i++){
+            if(type[p[playernow].buildings[i]] != 0){
+                rt += 1;
+            }
+        }
+    }
+    return rt;
+}
+
+int triumhalarch(int playernow){
+    //Triumhal Arch 凱旋門 (27)
+    int rt = 0, monument = 0;
+    if(checkbuilding(playernow, 26)){
+        for(int i=0; i<p[playernow].builds; i++){
+            if(type[p[playernow].buildings[i]] == 2){
+                monument++;
+            }
+        }
+        if(monument == 1){
+            rt = 4;
+        }else if(monument == 2){
+            rt = 6;
+        }else if(monument == 3){
+            rt = 8;
+        }
+    }
+    return rt;
+}
+
+int palace(int playernow, int vpcount){
+    //Palace 宮殿 (28)
+    int rt = 0;
+    if(checkbuilding(playernow, 28)){
+        rt = vpcount / 4;
+    }
+    return rt;
+}
+
+void caculatevp(int *vps, int verbose){
+    //Guild Hall 同業會館 (25), City Hall 市政廳 (26), Triumhal Arch 凱旋門 (27), Palace 宮殿 (28)
+    for(int i=0; i<players; i++){
+        int bonus;
+        for(int j=0; j<p[i].builds; j++){
+            vps[i] += vp[p[i].buildings[j]];
+        }
+        if(verbose){
+            printf("Player %d", i+1);
+            printf("=============================\n");
+            setcolor(GRN)
+            printf("Original VPs: ", vps[i]);
+            setcolor(RESET)
+        }
+
+        bonus = guildhall(i);
+        if(bonus){
+            if(verbose){
+                if(language == 0){
+                    printf("Use %sguild hall's%s ability, get 2 additional vp for every production building you build.\n", GRN, RESET);
+                }else{
+                    printf("發動 %s同業會館%s 能力, 每擁有一棟生產建築物可額外獲得2分\n", GRN, RESET);
+                }
+                setcolor(GRN)
+                printf("+ %d VPs", bonus);
+                setcolor(RESET)
+            }
+            vps[i] += bonus;
+        }
+        bonus = cityhall(i);
+        if(bonus){
+            if(verbose){
+                if(language == 0){
+                    printf("Use %scity hall's%s ability, get 1 additional vp for every non-production building you build.\n", GRN, RESET);
+                }else{
+                    printf("發動 %s市政廳%s 能力, 每擁有一棟非生產建築物可額外獲得1分\n", GRN, RESET);
+                }
+                setcolor(GRN_BACK)
+                printf("+ %d VPs\n", bonus);
+                setcolor(RESET)
+            }
+
+            vps[i] += bonus;
+        }
+        bonus = triumhalarch(i);
+        if(bonus){
+            if(verbose){
+                if(language == 0){
+                    printf("Use %striumhal arch's%s ability, get 4 additional vp for one monument.\n", GRN, RESET);
+                    printf("                                 6 additional vp for two monuments.\n");
+                    printf("                                 8 additional vp for three monuments.\n");
+                }else{
+                    printf("發動 %s凱旋門%s 能力, 擁有一棟紀念碑可額外獲得4分\n", GRN, RESET);
+                    printf("                     兩棟紀念碑可額外獲得6分\n");
+                    printf("                     三棟紀念碑可額外獲得8分\n");
+                }
+                setcolor(GRN)
+                printf("+ %d VPs\n", bonus);
+                setcolor(RESET)
+            }
+
+            vps[i] += bonus;
+        }
+        bonus = palace(i, vps[i]);
+        if(bonus){
+            if(verbose){
+                if(language == 0){
+                    printf("Use %spalace's%s ability, get 1 additional vp for every 4 victory points.\n", GRN, RESET);
+                }else{
+                    printf("發動 %s宮殿%s 能力, 每獲得四分可額外獲得1分\n", GRN, RESET);
+                }
+                setcolor(GRN_BACK)
+                printf("+ %d VPs\n", bonus);
+                setcolor(RESET)
+            }
+            vps[i] += bonus;
+        }
+        if(verbose){
+            setcolor(MAG_BACK)
+            printf("Total VPs: %d\n", vp[i]);
+            setcolor(RESET)
+            printf("=============================\n");
+        }
     }
 }
