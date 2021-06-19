@@ -917,7 +917,6 @@ void trader(int privilege){
                 printf("%s\n", tradertext[language][0]);
                 setcolor(RESET);
                 PAUSE
-                continue;
             }
             marketstand(playernow, sellcount);
             if(sellcount){
