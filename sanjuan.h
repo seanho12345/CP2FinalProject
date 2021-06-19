@@ -49,6 +49,7 @@ typedef struct _player{
     int builds;
     int cards,maxcard;
     int isbot;
+    int chapelvp;
 }player;
 
 //print menu stuff
@@ -89,6 +90,6 @@ int guildhall(int);
 int cityhall(int);
 int triumhalarch(int);
 int palace(int, int);
-
+void chapels(int);
 
 #endif
