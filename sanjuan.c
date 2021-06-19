@@ -596,6 +596,9 @@ void builder(int privilege){
                         }
                         costcount = cost[tmpbuilding] - cost[p[playernow].buildings[iscrane]];
                         p[playernow].buildings[iscrane] = tmpbuilding;
+                        p[playernow].deck[choice-1] = -1;
+                        rebuilddeck(playernow);
+                        invalid = 0;
                     }else{
                         reducecost += smithy(playernow, tmpbuilding) + quarry(playernow, tmpbuilding);
                         costcount = cost[p[playernow].deck[choice-1]]-reducecost;
