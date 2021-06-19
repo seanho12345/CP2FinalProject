@@ -91,5 +91,7 @@ int cityhall(int);
 int triumhalarch(int);
 int palace(int, int);
 void chapels(int);
+int library(int, int);
+
 
 #endif

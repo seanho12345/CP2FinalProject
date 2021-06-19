@@ -28,10 +28,10 @@ const string councilortext[2][1] = {{"Choose a card to keep"},
 /* 
 Card List:
 Indigo plant 染料廠, Sugar Mill 蔗糖廠, Tobacco storage 菸草廠, Coffee Roaster 咖啡廠, Silver smelter 白銀廠,
-Tower 塔樓(✔), Chapel 禮拜堂, Smithy 鐵匠鋪(✔), Poor House 救濟院(✔), Black Market 黑市(✔, lazy),
+Tower 塔樓(✔), Chapel 禮拜堂(✔), Smithy 鐵匠鋪(✔), Poor House 救濟院(✔), Black Market 黑市(✔, lazy),
 Crane 起重機, Carpenter 木工場(✔), Quarry 採石場(✔), Well 水井(✔), Aqueduct 溝渠(✔),
 Market Stand 攤販(✔), Market Hall 市場(✔),, Trading Post 交易所(✔), Archive 檔案館, Perfecture 辦公處(✔), 
-Gold mine 金礦坑(✔), Library 圖書館, Statue 雕鑄像紀念碑, Victory Column 勝利柱紀念碑, Hero 英雄像紀念碑,
+Gold mine 金礦坑(✔), Library 圖書館(✔), Statue 雕鑄像紀念碑, Victory Column 勝利柱紀念碑, Hero 英雄像紀念碑,
 Guild Hall 同業會館(✔), City Hall 市政廳(✔), Triumhal Arch 凱旋門(✔), Palace 宮殿(✔)
 */
 
@@ -537,6 +537,7 @@ void builder(int privilege){
             if(playernow == privilege){
                 reducecost++;
             }
+            reducecost += library(playernow, 1);
             while(1){   //Let user select card to build
                 CLEAR
                 printf("=============================\n");
@@ -629,6 +630,7 @@ void builder(int privilege){
             if(playernow == privilege){
                 reducecost++;
             }
+            reducecost += library(playernow, 1);
             if(botbuild){
                 for(int i=0; i<p[playernow].cards; i++){    //check which cards are buildable
                     if(cost[p[playernow].deck[i]]-reducecost <= p[playernow].cards-1){
@@ -707,6 +709,10 @@ void producer(int privilege){
             producecount++;
         }
         producecount += aqueduct(playernow);
+        int haslibrary = library(playernow, 2);
+        if(haslibrary){
+            producecount = haslibrary;
+        }
         if(p[playernow].isbot == 0){
             for(int i=0; i<p[playernow].builds; i++){
                 if(type[p[playernow].buildings[i]] == 0 && p[playernow].hasgoods[i] == -1){
@@ -855,6 +861,10 @@ void trader(int privilege){
                 tradecount++;
             }
             tradecount += tradingpost(playernow);
+            int haslibrary = library(playernow, 3);
+            if(haslibrary){
+                tradecount = haslibrary;
+            }
             //check if player has card to sell
             for(int i=0; i<p[playernow].builds; i++){
                 if(p[playernow].hasgoods[i] != -1){
@@ -933,6 +943,10 @@ void trader(int privilege){
                 if(playernow == privilege){
                     tradecount++;
                 }
+                int haslibrary = library(playernow, 3);
+                if(haslibrary){
+                    tradecount = haslibrary;
+                }
                 tradecount += tradingpost(playernow);
                 for(int i=0; i<p[playernow].builds; i++){
                     if(p[playernow].hasgoods[i] != -1){
@@ -999,12 +1013,16 @@ void councilor(int privilege){
     int playernow = privilege;
     int count = players;
     while(count--){
-        int tmpcards[5] = {-1};
+        int tmpcards[8] = {-1};
         int getcard = 2;
         int keepcard = 1;
         if(p[playernow].isbot == 0){
             if(playernow == privilege){
                 getcard = 5;
+            }
+            int haslibrary = library(playernow, 4);
+            if(haslibrary){
+                getcard = haslibrary;
             }
             keepcard += prefecture(playernow);
             for(int i=0; i<getcard; i++){
@@ -1062,6 +1080,10 @@ void councilor(int privilege){
             if(playernow == privilege){
                 getcard = 5;
             }
+            int haslibrary = library(playernow, 4);
+            if(haslibrary){
+                getcard = haslibrary;
+            }
             for(int i=0; i<getcard; i++){
                 tmpcards[i] = randomcard(); 
             }
@@ -1109,31 +1131,37 @@ void councilor(int privilege){
 
 void prospector(int privilege){
     int playernow = privilege;
+    int getcardnum = 1;
     int count = players;
     while(count--){
         if(playernow == privilege){
-            int getcard = randomcard();
-            p[playernow].deck[p[playernow].cards] = getcard;
-            p[playernow].cards++;
             CLEAR
-            if(p[playernow].isbot == 0){
-                if(language == 0){
-                    printf("Player %d got %s\n", playernow+1, cardNameData[language][getcard]);
+            getcardnum += library(playernow, 5);
+            while(getcardnum--){
+                int getcard = randomcard();
+                p[playernow].deck[p[playernow].cards] = getcard;
+                p[playernow].cards++;
+                
+                if(p[playernow].isbot == 0){
+                    if(language == 0){
+                        printf("Player %d got %s\n", playernow+1, cardNameData[language][getcard]);
+                    }else{
+                        printf("玩家 %d 拿到了 %s\n", playernow+1, cardNameData[language][getcard]);
+                    }
                 }else{
-                    printf("玩家 %d 拿到了 %s\n", playernow+1, cardNameData[language][getcard]);
+                    setcolor(CYN);
+                    printf("%s\n", botactiontext[language]);
+                    setcolor(RESET);
+                    printf("=============================\n");
+                    if(language == 0){
+                        printf("Player %d got one card\n", playernow+1);
+                    }else{
+                        printf("玩家 %d 拿到了一張卡\n", playernow+1);
+                    }
                 }
-            }else{
-                setcolor(CYN);
-                printf("%s\n", botactiontext[language]);
-                setcolor(RESET);
-                printf("=============================\n");
-                if(language == 0){
-                    printf("Player %d got one card\n", playernow+1);
-                }else{
-                    printf("玩家 %d 拿到了一張卡\n", playernow+1);
-                }
+                PAUSE
             }
-            PAUSE
+
         }
         goldmine(playernow);
         playernow++;
@@ -1672,4 +1700,48 @@ void chapels(int playernow){
             }
         }
     }
+}
+
+int library(int playernow, int phase){
+    //Library 圖書館 (21)
+    int rt = 0;
+    if(checkbuilding(playernow, 21)){
+        if (phase == 1){
+            if(language == 0){
+                printf("Use %slibrary's%s ability, reduce cost by two.\n", GRN, RESET);
+            }else{
+                printf("發動 %s圖書館%s 能力, 減少兩點花費\n", GRN, RESET);
+            }
+            rt = 2;
+        }else if(phase == 2){
+            if(language == 0){
+                printf("Use %slibrary's%s ability, can produce up to three goods.\n", GRN, RESET);
+            }else{
+                printf("發動 %s圖書館%s 能力, 最多可生產三份資源\n", GRN, RESET);
+            }
+            rt = 3;
+        }else if(phase == 3){
+            if(language == 0){
+                printf("Use %slibrary's%s ability, sell up to three goods.\n", GRN, RESET);
+            }else{
+                printf("發動 %s圖書館%s 能力, 最多可賣出三份資源\n", GRN, RESET);
+            }
+            rt = 3;
+        }else if(phase == 4){
+            if(language == 0){
+                printf("Use %slibrary's%s ability, get eight cards for selection.\n", GRN, RESET);
+            }else{
+                printf("發動 %s圖書館%s 能力, 抽取八張牌供選擇\n", GRN, RESET);
+            }
+            rt = 8;
+        }else if(phase == 5){
+            if(language == 0){
+                printf("Use %slibrary's%s ability, get two cards.\n", GRN, RESET);
+            }else{
+                printf("發動 %s圖書館%s 能力, 抽取兩張牌\n", GRN, RESET);
+            }
+            rt = 1;
+        }
+    }
+    return rt;
 }
