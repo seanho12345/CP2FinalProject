@@ -43,11 +43,11 @@ typedef char string[600];
 
 
 typedef struct _player{
+    int builds;
     int buildings[12];
     int hasgoods[12];
-    int deck[20];
-    int builds;
     int cards,maxcard;
+    int deck[20];
     int isbot;
     int chapelvp;
 }player;
