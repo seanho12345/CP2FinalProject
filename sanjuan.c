@@ -1592,7 +1592,7 @@ int palace(int playernow, int vpcount){
 
 void chapels(int playernow){
     //Chapel 禮拜堂 (6)
-    const string chapeltext[2][2] = {{"Do you want to use the ability?", "You chose not to use the ability", "You chose"},
+    const string chapeltext[2][3] = {{"Do you want to use the ability?", "You chose not to use the ability", "You chose"},
                                       {"你要使用這項能力嗎?", "你選擇不使用這項能力", "你選擇了"}};
     if(checkbuilding(playernow, 6)){
         if(p[playernow].isbot == 0){
