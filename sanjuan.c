@@ -107,6 +107,7 @@ const u8 priceList[5][5] = {{1, 1, 2, 2, 3},
 
 int cardCounts[29] = {0};
 int discardcard[29] = {0};
+int totalcard = 110;
 int language = 0;
 int gameover = 0;
 int players = 4;
@@ -186,10 +187,17 @@ void setlanguage(){
 
 //generate random card
 int randomcard(){ 
+    if(totalcard == 0){
+        for(int i=0; i<29; i++){
+            cardCounts[i] = discardcard[i];
+            discardcard[i] = 0;
+        }
+    }
     int rt = rand() % 29;
     while(cardCounts[rt] == 0){
         rt = rand() % 29;
     }
+    totalcard--;
     cardCounts[rt]--;
     return rt;
 }
@@ -202,10 +210,12 @@ void game_start(int players){
         cardCounts[i] = initcardCounts[i];
     }
     cardCounts[0] -= players;
+    totalcard -= players;
     for(int i=0; i<players; i++){
         p[i] = player_init;
         p[i].builds = 1;
         p[i].buildings[0] = 0;
+        
         for(int j=0; j<4; j++){
             p[i].deck[j] = randomcard(cardCounts);
             p[i].cards++;
@@ -297,6 +307,9 @@ void main_game(int playersarg){
         governor++;
         if(governor == 4){
             governor = 0;
+        }
+        for(int i=0; i<players; i++){
+            cardoverflow(i);
         }
     }
     int maxvp = 0, winner;
@@ -1487,7 +1500,7 @@ void caculatevp(int *vps, int verbose){
             printf("Player %d", i+1);
             printf("=============================\n");
             setcolor(GRN)
-            printf("Original VPs: ", vps[i]);
+            printf("Original VPs: %d", vps[i]);
             setcolor(RESET)
         }
 
@@ -1558,6 +1571,51 @@ void caculatevp(int *vps, int verbose){
             printf("Total VPs: %d\n", vp[i]);
             setcolor(RESET)
             printf("=============================\n");
+        }
+    }
+}
+
+void cardoverflow(int playernow){
+    const string cardoftext[2][1] = {{"Choose one card to discard"},
+                                     {"選擇一張卡丟棄"}};
+    if(p[playernow].cards > p[playernow].maxcard){
+        if(p[playernow].isbot == 0){
+            int choice, invalid;
+            while(p[playernow].cards > p[playernow].maxcard){
+                CLEAR
+                if(language == 0){
+                    printf("You exceeded max card limit (%d)\n Number of hands: %d\n", p[playernow].maxcard, p[playernow].cards);
+                }else{
+                    printf("你超過了手牌上限 (%d)\n 手牌數量: %d\n", p[playernow].maxcard, p[playernow].cards);
+                }
+                printf("=============================\n");
+                printdeck(playernow);
+                printf("=============================\n");
+                printf("%s\n", cardoftext[language][0]);
+                if(invalid) INVALID
+                printf("Choice: ");
+                scanf("%d", &choice);
+                FLUSH
+                if(choice < 1 || choice > p[playernow].cards){
+                    invalid = 1;
+                }else{
+                    choice--;
+                    playerdiscard(playernow, choice);
+                    
+                }
+            }
+        }else{
+            CLEAR
+            if(language == 0){
+                printf("Player %d exceeded max card limit (%d) and discarded %d card(s)\n", playernow+1, p[playernow].maxcard, p[playernow].cards - p[playernow].maxcard);
+            }else{
+                printf("玩家 %d 超過了手牌上限 (%d) 並丟棄了 %d 張手牌\n", playernow+1, p[playernow].maxcard, p[playernow].cards - p[playernow].maxcard);
+            }
+            while(p[playernow].cards > p[playernow].maxcard){
+                int choice = rand() % p[playernow].cards;
+                playerdiscard(playernow, choice);
+            }
+            PAUSE
         }
     }
 }

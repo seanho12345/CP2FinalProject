@@ -61,6 +61,8 @@ void main_game(int);
 void game_start(int);
 void printdeck(int);
 void caculatevp(int *, int);
+void cardoverflow(int);
+void checkstat(int);
 
 //role stuff
 void builder(int);
