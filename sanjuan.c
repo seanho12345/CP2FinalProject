@@ -127,7 +127,7 @@ void setlanguage(){
     language = rt-1;
 }
 
-int setplayers(){
+void setplayers(){
     int rt = 0,invalid = 0;
     while(rt < 2 || rt > 3){
         CLEAR
@@ -144,7 +144,7 @@ int setplayers(){
             invalid = 1;
         }
     }
-    return rt+1;
+    players = rt+1;
 }
 
 //generate random card
@@ -165,9 +165,10 @@ int randomcard(){
 }
 
 //game start init
-void game_start(int players){ 
+void game_start(){ 
+    setplayers();
     int choice = 0, invalid = 0;
-    p = calloc(4,sizeof(players));
+    p = calloc(players,sizeof(player));
     for(int i=0 ;i<29; i++){
         cardCounts[i] = initcardCounts[i];
     }
@@ -189,8 +190,7 @@ void game_start(int players){
 }
 
 //Main game
-void main_game(int playersarg){
-    players = playersarg;
+void main_game(){
     int governor = rand() % players;
     while(!gameover){
         int choserole[5] = {0};
@@ -298,6 +298,7 @@ void main_game(int playersarg){
         printf("玩家 %d 贏了 !!!", winner);
     }
     setcolor(RESET)
+    free(p);
 }
 
 int checkbuilding(int playernum, int cardnum){
@@ -916,7 +917,7 @@ void trader(int privilege){
                         printf("(%d) %s\n", i+1, cardNameData[language][p[playernow].buildings[goods[i]]]);
                     }
                     printf("=============================\n");
-                    printf("%s\n (%d/%d)", tradertext[language][1], consttradecount - tradecount + 1, consttradecount);
+                    printf("%s (%d/%d)\n", tradertext[language][1], consttradecount - tradecount + 1, consttradecount);
                     printf("(0) %s (1-%d) %s\n", tradertext[language][2], sellable, tradertext[language][3]);
                     printf("Choice: ");
                     scanf("%d", &choice);
@@ -1206,7 +1207,7 @@ void prospector(int privilege){
         }
         goldmine(playernow);
         playernow++;
-        if(playernow = players){
+        if(playernow == players){
             playernow = 0;
         }
     }

@@ -55,12 +55,12 @@ typedef struct _player{
 //print menu stuff
 void printbanner();
 int mainmenu();
-void setlanguage();
 
 //game stuff
-int setplayers();
-void main_game(int);
-void game_start(int);
+void setlanguage();
+void setplayers();
+void main_game();
+void game_start();
 void printdeck(int);
 void caculatevp(int *, int);
 void cardoverflow(int);
