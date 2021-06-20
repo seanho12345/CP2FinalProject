@@ -10,7 +10,7 @@ all:$(TARGETS)
 .SECONDEXPANSION:
 
 $(TARGETS):$$($$@_OBJ)
-	$(CC) $@.c $^ -o $@ $(LDFLAGS)
+	$(CC) $@.c $^ -o sanjuan $(LDFLAGS)
 
 %.o:%.c
 	$(CC) -c $^ -o $@
