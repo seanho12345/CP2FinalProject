@@ -8,8 +8,7 @@ int main(){
         choice = mainmenu();
         if(choice == 1){
             CLEAR
-            players = setplayers();
-            game_start(players);
+            game_start();
         }else if(choice == 2){
             setlanguage();
         }else if(choice == 3){
