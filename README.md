@@ -1,3 +1,21 @@
-# CP2FinalProject
+# CP2FinalProject - San Juan
 
-Help and save my final project :<
+## How to Build The Game
+Simply use make command to build the game
+```
+make
+```
+
+## Play The Game
+Enjoy :)
+```
+./sanjuan
+```
+
+## Clean Up
+Use this command to clean up files
+```
+make clean
+```
+
+
